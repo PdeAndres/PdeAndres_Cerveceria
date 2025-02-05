@@ -1,12 +1,10 @@
 <?php
 session_start();
-include('conexionBbdd.php');
+include('../includes/conexionBbdd.php');
 
 $correo = $_POST["usuario"];
 
 $password = $_POST["password"];
-
-
 
 $md5_password = md5($password);
 
@@ -26,8 +24,7 @@ if ($stmt) {
         $usuario = mysqli_fetch_assoc($resultado);
 
         $_SESSION["usuario"] = $usuario;
-
-
+        header("Location: ../vistas/home.php");
     } else {
         session_destroy();
         echo "No se ha encontrado ningun usuario";
