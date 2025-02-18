@@ -1,9 +1,9 @@
 <?php
 $host = 'localhost';
-$puerto = '3308';
+$puerto = '3306';
 $usuario = 'root';
 $pass = '';
-$db = 'Cerveceria';
+$db = 'cervecera';
 
 $conn = mysqli_connect($host, $usuario, $pass, $db, $puerto);
 

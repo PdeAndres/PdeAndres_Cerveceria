@@ -15,6 +15,7 @@ $stmt = mysqli_prepare($conn, $query);
 if ($stmt) {
     mysqli_stmt_bind_param($stmt, "ss", $correo, $md5_password);
 
+
     mysqli_stmt_execute($stmt);
 
     $resultado = mysqli_stmt_get_result($stmt);
@@ -28,6 +29,8 @@ if ($stmt) {
     } else {
         session_destroy();
         echo "No se ha encontrado ningun usuario";
+
+
     }
 }
 ?>
