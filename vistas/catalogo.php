@@ -1,9 +1,10 @@
+<!-- Catálogo -->
 <?php
+
 session_start();
 if (!isset($_SESSION["usuario"])) {
     header("Location: ../index.html");
 }
-
 include("../includes/conexionBbdd.php");
 include("../includes/funcionesAuxiliares.php");
 ?>
@@ -20,6 +21,7 @@ include("../includes/funcionesAuxiliares.php");
 <body>
 
     <?php
+
     if ($_SESSION["usuario"]["perfil"] == "admin") {
         include("../includes/headerAdmin.html");
     } else {
@@ -38,7 +40,7 @@ include("../includes/funcionesAuxiliares.php");
             </select>
             <input type="text" name="valor">
             <input type="submit" name="buscar" value="Buscar">
-            <input type="submit" name="verTodo" value="Ver todo">
+            <input type="submit" name="buscar" value="Ver todo">
 
         </form>
         <h1>Catálogo</h1>
@@ -58,24 +60,32 @@ include("../includes/funcionesAuxiliares.php");
             <tbody>
                 <?php
 
+                // Si se ha pulsado el botón de añadir al carrito, llama a la función para guardar el producto en el carrito
                 if (isset($_POST['agregar'])) {
                     guardarProductoCarrito();
                 }
 
+                // Si se ha pulsado el botón de buscar y se ha introducido valor.
                 if (isset($_POST['buscar']) && !empty($_POST['valor'])) {
+                    // Recoge el campo por el que se va a buscar y el valor a buscar
                     $campo = $_POST['campo'];
                     $valor = "%" . $_POST['valor'] . "%";
+
+                    // Prepara la consulta para buscar el producto por el campo y valor introducido
                     $sql = "SELECT * FROM producto WHERE $campo LIKE ?";
                     $stmt = mysqli_prepare($conn, $sql);
+
                     mysqli_stmt_bind_param($stmt, "s", $valor);
                     mysqli_stmt_execute($stmt);
                     $productos = mysqli_stmt_get_result($stmt);
                 } else {
+                    // Si no se introduce valor trae todos los productos
                     $sql = "SELECT * FROM producto";
                     $productos = mysqli_query($conn, $sql);
                 }
 
                 if (mysqli_num_rows($productos) > 0) {
+
                     while ($producto = mysqli_fetch_assoc($productos)) {
 
                         $id_producto = $producto["id_producto"];
@@ -98,12 +108,17 @@ include("../includes/funcionesAuxiliares.php");
                             echo "</form>";
                             echo "</td>";
                         }
-
                         echo "</tr>";
+
+
                     }
                 } else {
                     echo "<tr><td colspan='8'>No hay productos en el Catálogo</td></tr>";
                 }
+
+                // Cierra la consulta y la conexión a la BBDD
+                mysqli_stmt_close($stmt);
+                mysqli_close($conn);
                 ?>
             </tbody>
         </table>

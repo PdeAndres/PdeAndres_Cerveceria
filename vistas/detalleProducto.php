@@ -19,6 +19,7 @@ include("../includes/funcionesAuxiliares.php");
 
 <body>
     <?php
+    // Incluye el header en función del perfil del usuario
     if ($_SESSION["usuario"]["perfil"] == "admin") {
         include("../includes/headerAdmin.html");
     } else {
@@ -30,16 +31,14 @@ include("../includes/funcionesAuxiliares.php");
         <h1>Detalles</h1>
 
         <?php
-        if (isset($_GET["id"])) {
+
+
+        // Si se ha pasado un id por GET, se muestra el detalle del producto
+        if (!$_GET["id"]) {
+            header("Location: catalogo.php");
+        } else {
 
             $id_producto = $_GET["id"];
-
-            $sql = "SELECT * FROM producto WHERE id_producto = ?";
-            $stmt = mysqli_prepare($conn, $sql);
-            mysqli_stmt_bind_param($stmt, "i", $id_producto);
-            mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
-
 
             if ($_SESSION["usuario"]["perfil"] == "admin") {
                 echo "<a href='modificarCerveza.php?id=$id_producto'>Modificar</a>";
@@ -47,18 +46,46 @@ include("../includes/funcionesAuxiliares.php");
             }
             echo "<a href='catalogo.php'>Volver al catálogo</a>";
 
+            // Prepara la consulta
+            $sql = "SELECT * FROM producto WHERE id_producto = ?";
+            $stmt = mysqli_prepare($conn, $sql);
 
-            $producto = mysqli_fetch_array($result);
-            echo "<h2>" . $producto["denominacion"] . "</h2>";
-            echo "<p>Marca: " . $producto["marca"] . "</p>";
-            echo "<p>Tipo: " . $producto["tipo"] . "</p>";
-            echo "<p>Formato: " . $producto["formato"] . "</p>";
-            echo "<p>Cantidad: " . $producto["cantidad"] . "</p>";
-            echo "<p>Alergénos: " . $producto["alergenos"] . "</p>";
-            echo "<p>Fecha Consumo: " . $producto["fecha_consumo"] . "</p>";
-            echo "<p>Precio: " . $producto["precio"] . "€</p>";
-            echo "<p>Observaciones: " . $producto["observaciones"] . "</p>";
-            echo "<img src='" . $producto["imagen"] . "' alt='Foto del producto' width='200'>";
+            if ($stmt) {
+
+                // Prepara los parámetros de la consulta y la ejecuta
+                mysqli_stmt_bind_param($stmt, "i", $id_producto);
+                mysqli_stmt_execute($stmt);
+
+                // Obtiene el resultado de la consulta
+                $result = mysqli_stmt_get_result($stmt);
+                $producto = mysqli_fetch_array($result);
+
+                // Si la consulta tiene éxito, muestra los datos del producto
+                if ($producto) {
+
+
+                    echo "<h2>" . $producto["denominacion"] . "</h2>";
+                    echo "<p>Marca: " . $producto["marca"] . "</p>";
+                    echo "<p>Tipo: " . $producto["tipo"] . "</p>";
+                    echo "<p>Formato: " . $producto["formato"] . "</p>";
+                    echo "<p>Cantidad: " . $producto["cantidad"] . "</p>";
+                    echo "<p>Alergénos: " . $producto["alergenos"] . "</p>";
+                    echo "<p>Fecha Consumo: " . $producto["fecha_consumo"] . "</p>";
+                    echo "<p>Precio: " . $producto["precio"] . "€</p>";
+                    echo "<p>Observaciones: " . $producto["observaciones"] . "</p>";
+                    echo "<img src='" . $producto["imagen"] . "' alt='Foto del producto' width='200'>";
+                } else {
+                    echo "<p> No se ha encontrado el producto <p>";
+                }
+            } else {
+                echo "<p class='errorMsg'>Error en la preparación de la consulta: " . mysqli_error($conn) . "</p>";
+
+                // Cierra la consulta y la conexión a la BBDD
+                mysqli_stmt_close($stmt);
+                mysqli_close($conn);
+            }
+
+
 
         }
         ?>

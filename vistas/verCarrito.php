@@ -23,14 +23,7 @@ $total = 0;
     include("../includes/headerUser.html");
     ?>
     <main>
-
-
         <h1>Carrito</h1>
-
-
-
-
-
         <table border="1">
             <thead>
                 <tr>
@@ -46,46 +39,55 @@ $total = 0;
             </thead>
             <tbody>
                 <?php
+                // Si existe la sesión carrito y no está vacía.
                 if (isset($_SESSION["carrito"])) {
-
                     if (!empty($_SESSION["carrito"])) {
+                        // Recorremos el carrito.
                         foreach ($_SESSION["carrito"] as $elemento) {
 
+                            // Por cada producto en el carrito, guardamos su id y buscamos el producto en la base de datos.
                             $id_producto = $elemento["id_producto"];
-                            $sql = "SELECT * FROM producto WHERE id_producto=" . $id_producto;
-                            $result = mysqli_query($conn, $sql);
-                            $producto = mysqli_fetch_array($result);
-                            $total += $producto["precio"] * $elemento["total"];
+                            $sql = "SELECT * FROM producto WHERE id_producto = ?";
+                            $stmt = mysqli_prepare($conn, $sql);
 
-                            echo "<tr>";
-                            echo "<td>" . $producto["denominacion"] . "</td>";
-                            echo "<td>" . $producto["marca"] . "</td>";
-                            echo "<td>" . $producto["tipo"] . "</td>";
-                            echo "<td>" . $producto["formato"] . "</td>";
-                            echo "<td>" . $producto["cantidad"] . "</td>";
+                            if ($stmt) {
+                                mysqli_stmt_bind_param($stmt, "i", $id_producto);
+                                mysqli_stmt_execute($stmt);
+                                $result = mysqli_stmt_get_result($stmt);
+                                $producto = mysqli_fetch_array($result);
 
-                            // Mostramos la imagen del producto y si no tiene le asignamos una por defecto
-                            if ($producto["imagen"] == "../img/uploads/") {
-                                $producto["imagen"] = "../img/no-image.png";
+                                if ($producto) {
+
+                                    // Calculamos el total del carrito
+                                    $total += $producto["precio"] * $elemento["total"];
+
+                                    // Mostramos los datos del producto
+                                    echo "<tr>";
+                                    echo "<td>" . $producto["denominacion"] . "</td>";
+                                    echo "<td>" . $producto["marca"] . "</td>";
+                                    echo "<td>" . $producto["tipo"] . "</td>";
+                                    echo "<td>" . $producto["formato"] . "</td>";
+                                    echo "<td>" . $producto["cantidad"] . "</td>";
+                                    echo "<td><img src='" . $producto["imagen"] . "' width='100'></td>";
+                                    echo "<td>" . $elemento["total"] . "</td>";
+
+                                    // Si el usuario es admin, puede modificar o eliminar productos del carrito.
+                                    if ($_SESSION["usuario"]["perfil"] == "admin") {
+                                        echo "<td><a href='modificarProducto.php?id=$id_producto'>Modificar</a> | <a href='eliminarProducto.php?id=$id_producto'>Eliminar</a></td>";
+                                    } else {
+                                        // Si el usuario es user, puede ver el detalle del producto.
+                                        echo "<td>";
+                                        echo "<a href='detalleProducto.php?id=$id_producto'>Ver detalle</a>";
+                                        echo "</td>";
+                                    }
+                                    echo "</tr>";
+                                }
                             }
-                            echo "<td><img src='" . $producto["imagen"] . "' width='100'></td>";
-                            echo "<td>" . $elemento["total"] . "</td>";
-
-                            if ($_SESSION["usuario"]["perfil"] == "admin") {
-                                echo "<td><a href='modificarProducto.php?id=$id_producto'>Modificar</a> | <a href='eliminarProducto.php?id=$id_producto'>Eliminar</a></td>";
-                            } else {
-                                echo "<td>";
-                                echo "<a href='detalleProducto.php?id=$id_producto'>Ver detalle</a>";
-                                echo "</td>";
-                            }
-
-                            echo "</tr>";
                         }
                     } else {
                         echo "<tr><td colspan='8'>No hay productos en el carrito</td></tr>";
                     }
                 }
-
                 ?>
             </tbody>
         </table>

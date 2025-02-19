@@ -15,10 +15,13 @@ if (!isset($_SESSION["usuario"])) {
 </head>
 
 <body>
+
     <?php
+    // Se elimina el carrito de la sesión.
     unset($_SESSION["carrito"]);
     ?>
     <script>
+        /* Se redirige a home */
         alert("Pago realizado con éxito");
         window.location.href = "home.php";
     </script>

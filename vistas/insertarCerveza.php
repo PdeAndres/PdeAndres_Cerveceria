@@ -50,34 +50,28 @@ if (isset($_POST['botonEnviar'])) {
 
     // Si no hay errores se procesa la imagen y se insertan los datos en la BBDD.
     if (!$formError) {
-        if (!$formError) {
-            $destino_imagen = "../img/uploads";
+        $destino_imagen = "../img/uploads";
+        $isImagenSubida = guardarImagen($destino_imagen, $_FILES["imagen"]);
 
+        // Si la imagen se subió correctamente, obtenemos la ruta
+        if ($isImagenSubida) {
+            $ruta_imagen = "../img/uploads/" . $_FILES["imagen"]["name"];
+        } else {
+            // Si la imagen no se sube, asignamos una imagen por defecto
+            $ruta_imagen = "../img/no-image.png";
+        }
 
-
-            $isImagenSubida = guardarImagen($destino_imagen, $_FILES["imagen"]);
-
-            // Si la imagen se subió correctamente, obtenemos la ruta
-            if ($isImagenSubida) {
-                $ruta_imagen = "../img/uploads/" . $_FILES["imagen"]["name"];
-            } else {
-                // Si la imagen no se sube, asignamos una imagen por defecto
-                $ruta_imagen = "../img/no-image.png";
-            }
-
-
-
-            if ($isImagenSubida) {
-                // Insertar en la BBDD
-                $sql = "INSERT INTO producto 
+        if ($isImagenSubida) {
+            // Insertar en la BBDD
+            $sql = "INSERT INTO producto 
                 (denominacion, marca, tipo, formato, cantidad, alergenos, fecha_consumo, imagen, precio, observaciones) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-                $alergias = mysqli_real_escape_string($conn, implode(",", $_POST['alergenos']));
+            $alergias = mysqli_real_escape_string($conn, implode(",", $_POST['alergenos']));
+            $stmt = mysqli_prepare($conn, $sql);
 
-                $stmt = mysqli_prepare($conn, $sql);
-
-
+            if ($stmt) {
+                // Asignar valores a los parámetros de la consulta
                 mysqli_stmt_bind_param(
                     $stmt,
                     "ssssssssds",
@@ -108,15 +102,23 @@ if (isset($_POST['botonEnviar'])) {
                         "imagen" => $ruta_imagen
                     );
 
+                    // Cierra la consulta y la conexión a la BBDD
+                    mysqli_stmt_close($stmt);
+                    mysqli_close($conn);
 
                     header("Location: cervezaInsertada.php");
                     exit();
+
                 } else {
-                    echo "Error: " . $sql . "<br>" . mysqli_error($conn);
+                    echo "<p class='errorMsg'>Error en la preparación de la consulta: " . mysqli_error($conn) . "</p>";
                 }
             }
         }
+        // Cierra la consulta y la conexión a la BBDD
+        mysqli_stmt_close($stmt);
+        mysqli_close($conn);
     }
+
 }
 ?>
 <!DOCTYPE html>

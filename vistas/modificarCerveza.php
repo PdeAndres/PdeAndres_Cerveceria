@@ -61,47 +61,61 @@ if (isset($_POST['botonEnviar'])) {
             $ruta_imagen = "../img/no-image.png";
         }
 
-        $alergias = mysqli_real_escape_string($conn, implode(",", $_POST['alergenos']));
-        $id_producto = $_POST['id_producto'];
+        if ($isImagenSubida) {
 
-        // Actualizar en la BBDD
-        $sql = "UPDATE producto SET 
-            denominacion = ?, 
-            marca = ?, 
-            tipo = ?, 
-            formato = ?, 
-            cantidad = ?, 
-            alergenos = ?, 
-            fecha_consumo = ?, 
-            imagen = ?, 
-            precio = ?, 
-            observaciones = ? 
-            WHERE id_producto = ?";
+            // Actualizar en la BBDD
+            $sql = "UPDATE producto SET 
+        denominacion = ?, 
+        marca = ?, 
+        tipo = ?, 
+        formato = ?, 
+        cantidad = ?, 
+        alergenos = ?, 
+        fecha_consumo = ?, 
+        imagen = ?, 
+        precio = ?, 
+        observaciones = ? 
+        WHERE id_producto = ?";
 
-        $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param(
-            $stmt,
-            "ssssssssdsd",
-            $_POST['denominacion'],
-            $_POST['marca'],
-            $_POST['tipo'],
-            $_POST['formato'],
-            $_POST['cantidad'],
-            $alergias,
-            $_POST['fecha_consumo'],
-            $ruta_imagen,
-            $_POST['precio'],
-            $_POST['observaciones'],
-            $id_producto
-        );
+            $alergias = mysqli_real_escape_string($conn, implode(",", $_POST['alergenos']));
+            $id_producto = $_POST['id_producto'];
+            $stmt = mysqli_prepare($conn, $sql);
 
-        if (mysqli_stmt_execute($stmt)) {
-            header("Location: detalleProducto.php?id=$id_producto");
-            exit();
-        } else {
-            echo "Error: " . $sql . "<br>" . mysqli_error($conn);
+            if ($stmt) {
+                // Asignar valores a los parámetros de la consulta
+                mysqli_stmt_bind_param(
+                    $stmt,
+                    "ssssssssdsd",
+                    $_POST['denominacion'],
+                    $_POST['marca'],
+                    $_POST['tipo'],
+                    $_POST['formato'],
+                    $_POST['cantidad'],
+                    $alergias,
+                    $_POST['fecha_consumo'],
+                    $ruta_imagen,
+                    $_POST['precio'],
+                    $_POST['observaciones'],
+                    $id_producto
+                );
+                if (mysqli_stmt_execute($stmt)) {
+                    // Cierra la consulta y la conexión a la BBDD
+                    mysqli_stmt_close($stmt);
+                    mysqli_close($conn);
+
+                    header("Location: detalleProducto.php?id=$id_producto");
+                    exit();
+                } else {
+                    echo "Error: " . $sql . "<br>" . mysqli_error($conn);
+                }
+            } else {
+                echo "<p class='errorMsg'>Error en la preparación de la consulta: " . mysqli_error($conn) . "</p>";
+            }
         }
     }
+    // Cierra la consulta y la conexión a la BBDD
+    mysqli_stmt_close($stmt);
+    mysqli_close($conn);
 }
 ?>
 <!DOCTYPE html>
